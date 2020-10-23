@@ -7,6 +7,12 @@ navbar:
      href: index.html
    - text: "Spheroid"
      href: spheroid.html
+   - text: "Organoid"
+     href: organoid.html
+   - text: "PDX-biopsy"
+     href: biopsy.html
+   - text: "Comparative Analysis"
+     href: comparative_analysis.html
 output:
   html_document:
    theme: cosmo
