@@ -1,12 +1,12 @@
 name: "cars"
 output_dir: "docs"
 navbar:
-  title: "Cars"
+  title: "SEEP Analysis"
   left:
    - text: "Home"
      href: index.html
-   - text: "Speed and Distance"
-     href: speed-and-distance.html
+   - text: "Spheroid"
+     href: spheroid.html
 output:
   html_document:
    theme: cosmo
