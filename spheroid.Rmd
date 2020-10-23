@@ -1,5 +1,5 @@
 ---
-title: "Speed and Distance"
+title: "Spheroid"
 ---
 
 ```{r setup, include=FALSE}
