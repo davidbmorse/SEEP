@@ -1,14 +1,14 @@
 ---
-title: "Spheroid"
+title: "Organoid"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Spheroid Analysis Overview
+## Organoid Analysis Overview
 
-This is an R Markdown document going over the code necessary to analyz the spheroid data generated during the SEEP project.
+This is an R Markdown document going over the code necessary to analyz the Organoid data generated during the SEEP project.
 
 ```{r cars}
 summary(cars)

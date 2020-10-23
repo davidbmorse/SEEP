@@ -1,14 +1,14 @@
 ---
-title: "Spheroid"
+title: "Comparative Analysis"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Spheroid Analysis Overview
+## Analysis Comparing Spatial Transcriptomic Data of the Spheroid, Organoid, and PDX-biopsy samples
 
-This is an R Markdown document going over the code necessary to analyz the spheroid data generated during the SEEP project.
+This is an R Markdown document going over the code necessary to compare the data across the three model systmes studied during the SEEP project.
 
 ```{r cars}
 summary(cars)

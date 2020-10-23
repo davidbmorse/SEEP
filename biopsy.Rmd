@@ -1,14 +1,14 @@
 ---
-title: "Spheroid"
+title: "PDX-biopsy"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Spheroid Analysis Overview
+## PDX-biopsy Analysis Overview
 
-This is an R Markdown document going over the code necessary to analyz the spheroid data generated during the SEEP project.
+This is an R Markdown document going over the code necessary to analyz the PDX-biopsy data generated during the SEEP project.
 
 ```{r cars}
 summary(cars)
