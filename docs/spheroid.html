@@ -303,23 +303,33 @@ $(document).ready(function () {
 </div>
 
 
-<div id="spheroid-analysis-overview" class="section level2">
-<h2>Spheroid Analysis Overview</h2>
-<p>This is an R Markdown document going over the code necessary to analyz the spheroid data generated during the SEEP project.</p>
-<pre class="r"><code>summary(cars)</code></pre>
-<pre><code>##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00</code></pre>
+<div id="this-is-an-r-markdown-document-going-over-the-code-necessary-to-analyz-the-spheroid-data-generated-during-the-seep-project." class="section level4">
+<h4>This is an R Markdown document going over the code necessary to analyz the spheroid data generated during the SEEP project.</h4>
+<pre class="r"><code>#inlcude graphical deption of analysis procedure</code></pre>
 </div>
-<div id="including-plots" class="section level2">
-<h2>Including Plots</h2>
-<p>You can also embed plots, for example:</p>
-<p><img src="spheroid_files/figure-html/pressure-1.png" width="672" /></p>
-<p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+<div id="import-sparse-matrices-from-indrops-pipeline-and-covert-to-dense-matrices" class="section level2">
+<h2>Import sparse matrices from inDrops pipeline and covert to dense matrices</h2>
+<div id="dense-matrices-are-in-.mtx-format-similar-to-those-used-in-10x-genomics-analysis-and-are-convient-for-storing-sparse-matrices-densly.-they-are-composed-of-a-zipped-gene-list-cell-barcode-list-and-counts-matrix." class="section level4">
+<h4>Dense matrices are in .mtx format, similar to those used in 10X Genomics analysis and are convient for storing sparse matrices densly. They are composed of a zipped gene list, cell barcode list, and counts matrix.</h4>
+<pre class="r"><code>#code for converting to sparse matrices
+#output a summary of this matrix and files output</code></pre>
+</div>
+</div>
+<div id="load-dense-matrices-into-r" class="section level2">
+<h2>Load dense matrices into R</h2>
+<pre class="r"><code># load mtx matrices</code></pre>
+</div>
+<div id="initialize-and-filter-seurat-objects-based-on-distributions-of-umi-genes-and-mitochondrial-reads-per-cell" class="section level2">
+<h2>Initialize and Filter Seurat objects based on distributions of UMI, Genes, and % Mitochondrial Reads per cell</h2>
+<pre class="r"><code># initialize and filter</code></pre>
+</div>
+<div id="cluster-cells-by-gene-expression" class="section level2">
+<h2>Cluster cells by gene expression</h2>
+<pre class="r"><code># cluster cells</code></pre>
+</div>
+<div id="explore-highly-variable-genes-that-define-each-cell-cluster-i.e.-marker-genes" class="section level2">
+<h2>Explore highly variable genes that define each cell cluster (i.e., ‘marker genes’)</h2>
+<pre class="r"><code># define and explore marker genes</code></pre>
 </div>
 
 

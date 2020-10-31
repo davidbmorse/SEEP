@@ -1,0 +1,427 @@
+---
+title: "Preliminary analyses of scRNAseq from ovarian spheroids : GSEA"
+author: "michaloa"
+date: '2017-12-23'
+output:
+  html_document:
+    code_folding: hide
+    css: custom.css
+    fig_caption: yes
+    highlight: tango
+    number_sections: no
+    theme: sandstone
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: yes
+---
+*** 
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(root.dir="/Users/morsedb/Documents/Projects/PSS paint sort sequence/Analysis/PEO1_spheroids/1712_GSEA_scRNA_spheroid_layers") 
+knitr::opts_chunk$set(echo=TRUE,tidy=TRUE)
+knitr::opts_chunk$set(warning=FALSE,message=FALSE)
+knitr::opts_chunk$set(cache=TRUE,cache.lazy=FALSE)
+```
+
+
+# 1. GSEA PARAMETERS  
+#### **Test**: GSEA preranked, permutations by gene set  
+#### **Ranking metric**: log fold change between average expression of all cells in a layer vs. average expression across all layers 
+#### **Permutation number**: 10000;  
+#### **Gene set size**: 15-500;
+#### **MSigDB database**: v6.1;  
+#### **Test implementation**: [fgsea](https://bioconductor.org/packages/release/bioc/html/fgsea.html) Bioconductor R package;  
+#### **Collections tested**:  
+#### &nbsp;&nbsp; c1.all: positional gene sets by chromosome and cytogenetic band;  
+#### &nbsp;&nbsp; c2.cgp: curated gene sets, chemical and genetic perturbations;  
+#### &nbsp;&nbsp; c2.cp: curated gene sets, canonical pathways;  
+#### &nbsp;&nbsp; c3.mir: motif gene sets, microRNA targets;  
+#### &nbsp;&nbsp; c3.tft: motif gene sets, transcription factor targets;  
+#### &nbsp;&nbsp; c4.cgn: computational gene sets, cancer gene neighborhoods;  
+#### &nbsp;&nbsp; c4.cm: computational gene sets, cancer modules;  
+#### &nbsp;&nbsp; c5.bp: GO gene sets, biological process;  
+#### &nbsp;&nbsp; c5.cc: GO gene sets, cellular components;  
+#### &nbsp;&nbsp; c5.mf: GO gene sets, molecular function;  
+#### &nbsp;&nbsp; c6.all: oncogenic signatures;  
+#### &nbsp;&nbsp; c7.all: immunologic signatures;  
+#### &nbsp;&nbsp; h.all: hallmark gene sets.  
+&nbsp;&nbsp; more info on collections  http://software.broadinstitute.org/gsea/msigdb/collection_details.jsp  
+
+# 2. GSEA FDR 
+- Number of selected gene sets by false discovery rate adjusted p-value  
+- padj cutoffs = 0.01, 0.05, 0.1
+```{r }
+source("/Users/morsedb/Documents/Projects/PSS paint sort sequence/Analysis/PEO1_spheroids/1712_GSEA_scRNA_spheroid_layers/Codes/01GSEA_pGSEAfunction.R")
+data(pGSEA)
+padj=c(0.01,0.05, 0.1)
+tab = rbind(
+  CENTRAL=count.sig(gsea_CENTRAL, fdr.level=padj, group.name='CENTRAL'),
+  INNER=count.sig(gsea_INNER, fdr.level=padj, group.name='INNER'),
+  OUTER=count.sig(gsea_OUTER, fdr.level=padj, group.name='OUTER'),
+  SURFACE=count.sig(gsea_SURFACE, fdr.level=padj, group.name='SURFACE'),
+  ALL.Tests=count.sig(gsea_SURFACE, fdr.level=1, group.name='N pathways tested')
+)
+rownames(tab) = NULL
+library(DT)
+datatable(tab, options = list(pageLength = 13, dom = 'tip'), rownames = FALSE)
+```
+
+# 3. Global profiles
+
+```{r }
+library(Seurat)
+data(Preranked)
+data(Data_scaled)
+data(pGSEA)
+source("/Users/morsedb/Documents/Projects/PSS paint sort sequence/Analysis/PEO1_spheroids/1712_GSEA_scRNA_spheroid_layers/Codes/01GSEA_pGSEAfunction.R")
+dx=Data@data
+mm=t(apply(dx,1,tapply, Data@ident, calc.logMean))
+mms = apply(dx,1,calc.logMean)
+mm1= data.frame(mm,TOTAL=mms)
+dd = mm - mms
+dd1=mm1-mms
+```
+
+## 3.1 Average GEX levels
+```{r fig.width=8, fig.height=6}
+library(ggplot2)
+library(reshape2)
+dfm = melt(mm1, variable.name = 'location', value.name = 'average_log_expression')
+dfd = melt(data.frame(dd), variable.name = 'location', value.name = 'average_log_fold_change')
+ggplot(dfm, aes(x=location, y=average_log_expression, fill=location))  +  geom_jitter(size=0.01, width=0.4, aes(colour=location)) + geom_violin(scale='area') 
+```
+
+```{r fig.width=8, fig.height=8}
+library(GGally)
+ggpairs(data.frame(mm1), mapping=ggplot2::aes(colour_scale_manual = 'grey'), lower=list(continuous='smooth'), diag=list(continuous='barDiag'))
+```
+
+## 3.2 Average GEX differences
+```{r fig.width=8, fig.height=6}
+ggplot(dfd, aes(x=location, y=average_log_fold_change, fill=location))  +  geom_jitter(size=0.01, width=0.3, aes(colour=location)) + geom_violin(scale='area', draw_quantiles=c(0.25,0.5,0.75)) 
+```
+
+```{r fig.width=8, fig.height=8}
+ggpairs(data.frame(dd), mapping=ggplot2::aes(colour_scale_manual = 'grey'), lower=list(continuous='smooth'), diag=list(continuous='barDiag'))
+```
+
+# 4. INTERFERON RESPONSE
+## 4.1 GSEA plots
+### 4.1.1 Interferon alpha
+
+```{r fig.width=6, fig.height=6, dpi=100}
+setwd("/Users/morsedb/Documents/Projects/PSS paint sort sequence/Analysis/PEO1_spheroids/1712_GSEA_scRNA_spheroid_layers/MSigDB")
+load("MSigDB_subsets.rda")
+pathway="HALLMARK_INTERFERON_ALPHA_RESPONSE"
+loc="CENTRAL"
+fid=which(gsea_CENTRAL$h.all$pathway==pathway)
+gseaRes=gsea_CENTRAL$h.all[fid, ]
+nameGset = gseaRes$pathway
+collection="h.all"
+gset = L_subsets[[collection]][[nameGset]]
+ranks = difs$CENTRAL
+names(ranks) = rownames(difs)
+plot.ES(rank.statistic = ranks, gsea=gseaRes, gene.set=gset, name=nameGset, pathwaySource=collection, location=loc)
+
+loc="INNER"
+fid=which(gsea_INNER$h.all$pathway==pathway)
+gseaRes=gsea_INNER$h.all[fid, ]
+nameGset = gseaRes$pathway
+collection="h.all"
+gset = L_subsets[[collection]][[nameGset]]
+ranks = difs$INNER
+names(ranks) = rownames(difs)
+I_alpha = sort(unlist(gseaRes$leadingEdge))
+plot.ES(rank.statistic = ranks, gsea=gseaRes, gene.set=gset, name=nameGset, pathwaySource=collection, location=loc)
+
+loc="OUTER"
+fid=which(gsea_OUTER$h.all$pathway==pathway)
+gseaRes=gsea_OUTER$h.all[fid, ]
+nameGset = gseaRes$pathway
+collection="h.all"
+gset = L_subsets[[collection]][[nameGset]]
+ranks = difs$OUTER
+names(ranks) = rownames(difs)
+O_alpha = sort(unlist(gseaRes$leadingEdge))
+plot.ES(rank.statistic = ranks, gsea=gseaRes, gene.set=gset, name=nameGset, pathwaySource=collection, location=loc)
+
+loc="SURFACE"
+fid=which(gsea_SURFACE$h.all$pathway==pathway)
+gseaRes=gsea_SURFACE$h.all[fid, ]
+nameGset = gseaRes$pathway
+collection="h.all"
+gset = L_subsets[[collection]][[nameGset]]
+ranks = difs$SURFACE
+names(ranks) = rownames(difs)
+S_alpha = sort(unlist(gseaRes$leadingEdge))
+plot.ES(rank.statistic = ranks, gsea=gseaRes, gene.set=gset, name=nameGset, pathwaySource=collection, location=loc)
+```
+
+### 4.1.2 Interferon gamma  
+
+```{r fig.width=6, fig.height=6, dpi=100}
+setwd("/Users/morsedb/Documents/Projects/PSS paint sort sequence/Analysis/PEO1_spheroids/1712_GSEA_scRNA_spheroid_layers/MSigDB")
+load("MSigDB_subsets.rda")
+pathway="HALLMARK_INTERFERON_GAMMA_RESPONSE"
+loc="CENTRAL"
+fid=which(gsea_CENTRAL$h.all$pathway==pathway)
+gseaRes=gsea_CENTRAL$h.all[fid, ]
+nameGset = gseaRes$pathway
+collection="h.all"
+gset = L_subsets[[collection]][[nameGset]]
+ranks = difs$CENTRAL
+names(ranks) = rownames(difs)
+plot.ES(rank.statistic = ranks, gsea=gseaRes, gene.set=gset, name=nameGset, pathwaySource=collection, location=loc)
+
+loc="INNER"
+fid=which(gsea_INNER$h.all$pathway==pathway)
+gseaRes=gsea_INNER$h.all[fid, ]
+nameGset = gseaRes$pathway
+collection="h.all"
+gset = L_subsets[[collection]][[nameGset]]
+ranks = difs$INNER
+names(ranks) = rownames(difs)
+I_gamma = sort(unlist(gseaRes$leadingEdge))
+plot.ES(rank.statistic = ranks, gsea=gseaRes, gene.set=gset, name=nameGset, pathwaySource=collection, location=loc)
+
+loc="OUTER"
+fid=which(gsea_OUTER$h.all$pathway==pathway)
+gseaRes=gsea_OUTER$h.all[fid, ]
+nameGset = gseaRes$pathway
+collection="h.all"
+gset = L_subsets[[collection]][[nameGset]]
+ranks = difs$OUTER
+names(ranks) = rownames(difs)
+O_gamma = sort(unlist(gseaRes$leadingEdge))
+plot.ES(rank.statistic = ranks, gsea=gseaRes, gene.set=gset, name=nameGset, pathwaySource=collection, location=loc)
+
+loc="SURFACE"
+fid=which(gsea_SURFACE$h.all$pathway==pathway)
+gseaRes=gsea_SURFACE$h.all[fid, ]
+nameGset = gseaRes$pathway
+collection="h.all"
+gset = L_subsets[[collection]][[nameGset]]
+ranks = difs$SURFACE
+names(ranks) = rownames(difs)
+S_gamma = sort(unlist(gseaRes$leadingEdge))
+plot.ES(rank.statistic = ranks, gsea=gseaRes, gene.set=gset, name=nameGset, pathwaySource=collection, location=loc)
+```
+
+```{r}
+nameGset = "HALLMARK_INTERFERON_GAMMA_RESPONSE|HALLMARK_INTERFERON_ALPHA_RESPONSE"
+collection="h.all"
+lgset = L_subsets[[collection]]
+gset = lgset[grep(nameGset,names(lgset))]
+alpha = intersect(gset$HALLMARK_INTERFERON_ALPHA_RESPONSE,rownames(Data@data))
+gamma = intersect(gset$HALLMARK_INTERFERON_GAMMA_RESPONSE, rownames(Data@data))
+S_inter = union(S_alpha,S_gamma)
+I_inter = union(I_alpha,I_gamma)
+O_inter = union(O_alpha,O_gamma)
+inter = unique(c(I_inter,O_inter,S_inter))
+mat = Data@data[inter,]
+difmat = t(apply(mat,1, function(x) x - calc.logMean(x)))
+# DAVID 5/19/19
+# S_inter_Sph <- S_inter
+# SO_inter_Sph <- unique(c(O_inter,S_inter))
+# saveRDS(S_inter_Sph, "/Users/morsedb/Documents/Projects/PSS paint sort sequence/Analysis/PEO1_spheroids/1712_GSEA_scRNA_spheroid_layers/data/surface_LE.rds")
+# saveRDS(SO_inter_Sph, "/Users/morsedb/Documents/Projects/PSS paint sort sequence/Analysis/PEO1_spheroids/1712_GSEA_scRNA_spheroid_layers/data/surf_outer_LE.rds")
+```
+
+
+
+## 4.2 Cell heatmaps 
+- Clustering with both interferon alpha and gamma gene sets (leading edge members in any layer);
+- Heatmaps show relative gene expression centered with average calculated across all cells and layers for each gene;   
+- HC using Euclidean distance and Ward linkage;  
+- Rows are ordered by the clustering of the average log differences (first heatmap on the left);  
+- Colums are ordered by clustering of cells in each layer;
+```{r fig.width=40, fig.height=20, dpi=150}
+ds=5
+asp='fill'
+library(RColorBrewer)
+library(lattice)
+library(latticeExtra)
+library(grid)
+library(gridExtra)
+
+# Average difference heatmap 
+threshold = 0.35 #max(ceiling(range(dat1)))-2
+scale.range= c(-threshold, threshold)
+zak= seq(scale.range[1],scale.range[2],0.01)
+nzak=length(zak)
+pal = rev(brewer.pal(11,'Spectral'))
+pal[6] = 'white'
+pal=c('navyblue',pal[1:6],'white',pal[7:11],'#3f003f')
+pal = c(rev(c(brewer.pal(9,"Blues"),'navyblue')), c(brewer.pal(9,'Reds'),'#3f003f'))
+colo = colorRampPalette(pal, space="Lab")(nzak) 
+#breaks = c(seq(-35, 10, length.out=NBR.COLORS/2), 10, seq(10, 35, length.out=NBR.COLORS/2))
+mat=dd[inter,]
+rowv = as.dendrogram(hclust(dist(mat),method='ward.D'))
+colv = as.dendrogram(hclust(dist(t(mat)),method='ward.D'))
+row.ord = order.dendrogram(rowv)
+col.ord = order.dendrogram(colv)
+sdat = apply(mat,2,function(x) ifelse(x<=-threshold, -threshold, x))
+sdat = t(apply(sdat,2,function(x) ifelse(x>=threshold, threshold, x)))
+rownames(sdat) = substring(rownames(sdat),1,1)
+p=levelplot(sdat[col.ord, row.ord], col.regions=colo, at=zak,  
+            aspect = asp, xlab='', ylab='',
+            scales = list(x = list(rot = 0, cex=3, lwd=0), tck=c(0,0), alternating=2, y = list(cex=0.9)), 
+            colorkey = list(space='left'),
+            legend = list(
+              right = list(fun = dendrogramGrob, args = list(x = rowv, ord = row.ord, side = "right",size = 6)),
+              top = list(fun = dendrogramGrob, args = list(x = colv, ord=col.ord, side = "top", size = ds, colour='white'))))
+p.diff = p
+
+# CENTRAL
+threshold = 4#max(ceiling(range(dat1)))-2
+scale.range= c(-threshold, threshold)
+zak= seq(scale.range[1],scale.range[2],0.1)
+nzak=length(zak)
+colo = colorRampPalette(pal, space="Lab")(nzak) 
+mat=difmat[,Data@ident=='CENTRAL']
+colv = as.dendrogram(hclust(dist(t(mat)),method='ward.D'))
+col.ord = order.dendrogram(colv)
+sdat = apply(mat,2,function(x) ifelse(x<=-threshold, -threshold, x))
+sdat = t(apply(sdat,2,function(x) ifelse(x>=threshold, threshold, x)))
+rownames(sdat) = rep("",nrow(sdat))
+rownames(sdat)[col.ord][700] = 'CENTRAL'
+p=levelplot(sdat[col.ord, row.ord], col.regions=colo, at=zak,  
+            aspect = asp, xlab='', ylab='',
+            scales = list(x = list(rot = 0, cex=3, lwd=0), tck=c(0,0), alternating=2, y = list(cex=0.9)), 
+            colorkey = list(space='left'),
+            legend = list(
+              top = list(fun = dendrogramGrob, args = list(x = colv, ord=col.ord, side = "top", size = ds, colour='white'))))
+p_C = p
+
+# INNER
+mat=difmat[,Data@ident=='INNER']
+colv = as.dendrogram(hclust(dist(t(mat)),method='ward.D'))
+col.ord = order.dendrogram(colv)
+sdat = apply(mat,2,function(x) ifelse(x<=-threshold, -threshold, x))
+sdat = t(apply(sdat,2,function(x) ifelse(x>=threshold, threshold, x)))
+rownames(sdat) = rep("",nrow(sdat))
+rownames(sdat)[col.ord][1000] = 'INNER'
+p=levelplot(sdat[col.ord, row.ord], col.regions=colo, at=zak,  
+            aspect = asp, xlab='', ylab='',
+            scales = list(x = list(rot = 0, cex=3, lwd=0), tck=c(0,0), alternating=2, y = list(cex=0.9)), 
+            colorkey = FALSE,
+            legend = list(
+            top = list(fun = dendrogramGrob, args = list(x = colv, ord=col.ord, side = "top", size = ds, colour='white'))))
+p_I = p
+
+# OUTER
+mat=difmat[,Data@ident=='OUTER']
+colv = as.dendrogram(hclust(dist(t(mat)),method='ward.D'))
+col.ord = order.dendrogram(colv)
+sdat = apply(mat,2,function(x) ifelse(x<=-threshold, -threshold, x))
+sdat = t(apply(sdat,2,function(x) ifelse(x>=threshold, threshold, x)))
+rownames(sdat) = rep("",nrow(sdat))
+rownames(sdat)[col.ord][1000] = 'OUTER'
+p=levelplot(sdat[col.ord, row.ord], col.regions=colo, at=zak,  
+            aspect = asp, xlab='', ylab='',
+            scales = list(x = list(rot = 0, cex=3, lwd=0), tck=c(0,0), alternating=2, y = list(cex=0.9)), 
+            colorkey = FALSE,
+            legend = list(
+            top = list(fun = dendrogramGrob, args = list(x = colv, ord=col.ord, side = "top", size = ds, colour='white'))))
+p_O = p
+
+# SURFACE
+mat=difmat[,Data@ident=='SURFACE']
+colv = as.dendrogram(hclust(dist(t(mat)),method='ward.D'))
+col.ord = order.dendrogram(colv)
+sdat = apply(mat,2,function(x) ifelse(x<=-threshold, -threshold, x))
+sdat = t(apply(sdat,2,function(x) ifelse(x>=threshold, threshold, x)))
+rownames(sdat) = rep("",nrow(sdat))
+rownames(sdat)[col.ord][700] = 'SURFACE'
+p=levelplot(sdat[col.ord, row.ord], col.regions=colo, at=zak,  
+            aspect = asp, xlab='', ylab='',
+            colorkey=FALSE,
+            scales = list(x = list(rot = 0, cex=3, lwd=0), tck=c(0,0), alternating=2, y = list(cex=0.9)), 
+              legend = list(
+                        top = list(fun = dendrogramGrob, args = list(x = colv, ord=col.ord, side = "top", size = ds, colour='white'))))
+p_S = p
+
+# plot heatmaps
+grid.arrange(p.diff, p_C, p_I, p_O, p_S, ncol=5, widths=c(0.8,1,1,1,1))
+```
+
+## 4.3 Table: gene estimates  
+Interferon alpha/gamma LE members are listed;  
+Column headers:  
+- No: gene order from the heatmaps;  
+- logFC: log fold change for a layer;  
+- logAve: log average expression in a layer;  
+- LE: a/g indicate membership in alpha/gamma interferon response gene set;  
+- LE_alpha/LE_gamma: indicate leading edge member in a layer;  
+- pct: percent cells expressing a gene in a layer, totals of cells in layers are:  
+  C=1404, I=2776, O=3036, S=1845.  
+
+```{r }
+tab=signif(data.frame(dd[inter,], mm1[inter,]),2)[rev(row.ord),]
+i=ifelse(is.element(rownames(tab),I_alpha), 'I','')
+o=ifelse(is.element(rownames(tab),O_alpha), 'O','')
+s=ifelse(is.element(rownames(tab),S_alpha), 'S','')
+lea = paste(i,o,s, sep='')
+i=ifelse(is.element(rownames(tab),I_gamma), 'I','')
+o=ifelse(is.element(rownames(tab),O_gamma), 'O','')
+s=ifelse(is.element(rownames(tab),S_gamma), 'S','')
+leg = paste(i,o,s, sep='')
+le = ifelse(!(lea=="" & leg==""), 'a/g', '')
+le = ifelse(lea !='' & leg=='', 'a',le)
+le = ifelse(lea =='' & leg!='', 'g', le)
+pct=t(apply(Data@raw.data,1, tapply, Data@ident, function(x) sum(x>0)/length(x)))
+ipct=signif(pct[rownames(tab),]*100,2)
+tab = data.frame(No = 1:nrow(tab), rownames(tab), tab, le, lea, leg, ipct)
+names(tab) = c('No', 'Gene', 'logFC_C','logFC_I','logFC_O','logFC_S',
+               'logAve_C','logAve_I','logAve_O','logAve_S','logAve_Tot',
+               'LE', 'LE_alpha','LE_gamma', 'pct_C','pct_I','pct_O', 'pct_S')
+datatable(tab, rownames=FALSE, filter = 'top', options = list(pageLength = 25, autoWidth = TRUE, columnDefs = list(list(targets = (0:(ncol(tab)-1))[-c(2, 12:14)], searchable = FALSE)), lengthMenu = c(5,seq(0,125,length.out = 6)[-1])))
+```
+
+
+## 4.4 Plots: gene expression
+Interferon alpha/gamma LE members are plotted in alphabetical order
+
+```{r fig.width=10, fig.height=10}
+library(ggridges)
+library(qlcMatrix) 
+all.features = sort(rownames(ipct))
+dat=as.matrix(Data@data[all.features,])
+dat.mean = mm[all.features,]
+diff.range = rowMax(dat.mean)-rowMin(dat.mean)
+diff.max = max(diff.range)
+layer = Data@ident
+plot.list = vector('list', length(all.features))
+names(plot.list) = all.features
+for(i in 1:length(all.features)){
+  df = data.frame(layer,value=dat[i,])
+  df0=df
+  df0[df0==0]=NA
+  rownames(df) = NULL
+  dfm = melt(t((dat.mean[i,,drop=T])))
+  colnames(dfm) = c('line','layer','average')
+  df$cells = ifelse(df$value==0,'non-expressing','expressing')
+  df$location = substring(df$layer, 1, 1)
+  diff = diff.range[i]
+  if(diff < diff.max){
+    ylow <- (min(dfm$average) - diff.max/2) + diff/2
+    yhigh <- (max(dfm$average) + diff.max/2) - diff/2
+  } else {
+    ylow = min(dfm$average)
+    yhigh = max(dfm$average)
+  }
+  # generate plots
+  p = ggplot(df0, aes(x = value, y = layer, fill = layer, height = ..density..)) + 
+    geom_density_ridges(stat = "binline", bins = 50, scale = 0.95, alpha=0.5, draw_baseline = FALSE) + guides(fill=FALSE, colour=FALSE) +
+    geom_density_ridges(alpha=0.2, scale=1, aes(colour=layer), rel_min_height = 0.01) + theme_ridges() + 
+    labs(title = paste(names(plot.list)[i], '(expressing cells)'), y='', x = 'log normalized expression')
+  plot.list[[i]] = p
+  g = ggplot(dfm, aes(x=layer, y=average, col=layer)) + geom_line(group=1, colour='black') + geom_point(size=3) + guides(colour=FALSE) + labs(title=paste(names(plot.list)[i], '(all cells)'), x='', y='average log expression') + ylim(ylow, yhigh)
+  x = ggplot(df, aes(x = location, fill = cells)) + geom_bar() + 
+    scale_fill_manual(values=c('non-expressing'='lightgrey', 'expressing'='black')) + 
+    labs(title = names(plot.list)[i], x='', y='cell count')
+  # display plots
+  grid.arrange(arrangeGrob(g,x, ncol=2, nrow=1), arrangeGrob(p, ncol=1, nrow=1), heights=c(1.2,2.8))
+}
+```
