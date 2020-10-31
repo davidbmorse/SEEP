@@ -6,20 +6,42 @@ title: "Spheroid"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Spheroid Analysis Overview
-
-This is an R Markdown document going over the code necessary to analyz the spheroid data generated during the SEEP project.
+#### This is an R Markdown document going over the code necessary to analyz the spheroid data generated during the SEEP project.
 
 ```{r cars}
-summary(cars)
+#inlcude graphical deption of analysis procedure
 ```
 
-## Including Plots
+## Import sparse matrices from inDrops pipeline and covert to dense matrices
+#### Dense matrices are in .mtx format, similar to those used in 10X Genomics analysis and are convient for storing sparse matrices densly. They are composed of a zipped gene list, cell barcode list, and counts matrix.
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r pressure}
+#code for converting to sparse matrices
+#output a summary of this matrix and files output
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Load dense matrices into R
+
+```{r load matrices}
+# load mtx matrices
+```
+
+## Initialize and Filter Seurat objects based on distributions of UMI, Genes, and % Mitochondrial Reads per cell
+
+```{r filter cells}
+# initialize and filter
+```
+
+## Cluster cells by gene expression
+
+```{r cluster cells}
+# cluster cells
+```
+
+## Explore highly variable genes that define each cell cluster (i.e., 'marker genes')
+
+```{r explore markers}
+# define and explore marker genes
+```
+
+
