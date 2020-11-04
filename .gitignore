@@ -14,8 +14,8 @@
 # Output files from R CMD build
 /*.tar.gz
 
-# Zipped data files (added by DBM)
-/*.gz
+# ignore data pulled from GEO (added by DBM)
+/GSE157299/*
 
 # Output files from R CMD check
 /*.Rcheck/
