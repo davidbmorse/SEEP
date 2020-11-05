@@ -19,6 +19,7 @@
 #Doesnt seem to be working
 /GSE157299/*
 /test/
+/biopsy_10X/
 
 # Output files from R CMD check
 /*.Rcheck/
