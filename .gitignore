@@ -18,6 +18,7 @@
 # ignore data pulled from GEO (added by DBM) 
 #Doesnt seem to be working
 /GSE157299/*
+/test/
 
 # Output files from R CMD check
 /*.Rcheck/
