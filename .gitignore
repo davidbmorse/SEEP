@@ -16,7 +16,6 @@
 /*.tar.gz
 
 # ignore data pulled from GEO (added by DBM) 
-#Doesnt seem to be working
 /biopsy_10X/
 /spheroid_10X/
 /organoid_10X/
