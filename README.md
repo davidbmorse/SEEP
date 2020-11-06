@@ -9,7 +9,7 @@ For image processing and analysis code see [SEEP_image_processing](https://githu
 ### Data
 Mapped single-cell RNA-seq data as counts matrices to be read into provided code
 ### Code
-R-scripts used to filter and analyze single-cell RNA-seq data. Organized by tissue analyzed and helper functions.
+R-scripts used to filter and analyze single-cell RNA-seq data. Organized by tissue analyzed and helper functions
 ### Figures
 R-code used to generate key figures from the SEEP project
 ### Docs
